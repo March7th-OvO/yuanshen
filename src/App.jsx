@@ -40,7 +40,7 @@ export default function App() {
       <div className="stars stars--far" aria-hidden="true" />
 
       <header className="app-header">
-        <h1>保底进度量杯</h1>
+        <h1>五星角色获取进度</h1>
         <p className="subtitle">纠缠之缘与原石折算 · 满杯即达保底</p>
         {configFailed && (
           <p className="config-warning">配置文件读取失败，当前使用内置兜底数据</p>
@@ -65,7 +65,7 @@ export default function App() {
                   <span className="percent-value">{percent.toFixed(2)}</span>
                   <span className="percent-sign">%</span>
                 </div>
-                <p className="percent-caption">距离保底</p>
+                <p className="percent-caption">获取进度</p>
               </section>
             );
           })}
