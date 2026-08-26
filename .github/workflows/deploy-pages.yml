@@ -18,9 +18,18 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      built_sha: ${{ steps.source.outputs.sha }}
     steps:
-      - name: Checkout
+      - name: Checkout latest main
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Record source revision
+        id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -48,6 +57,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - name: Verify artifact is still latest main
+        id: freshness
+        env:
+          BUILT_SHA: ${{ needs.build.outputs.built_sha }}
+        run: |
+          LATEST_SHA="$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          echo "Built SHA:  ${BUILT_SHA}"
+          echo "Latest SHA: ${LATEST_SHA}"
+          if [ "${BUILT_SHA}" = "${LATEST_SHA}" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping stale artifact deployment."
+          fi
+
       - name: Deploy to GitHub Pages
+        if: steps.freshness.outputs.deploy == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
