@@ -1,0 +1,389 @@
+/* ==============================================
+   保底进度量杯 · 原神主题样式
+   深蓝星空底 + 金色点缀 + 玻璃量杯水体动画
+   ============================================== */
+
+:root {
+  --gold: #e8c77a;
+  --gold-bright: #ffe9b0;
+  --text: #e8ecff;
+  --text-dim: #9aa3c7;
+  --ease-slide: cubic-bezier(0.65, 0.05, 0.18, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 800px at 72% -12%, rgba(43, 52, 124, 0.85) 0%, transparent 60%),
+    radial-gradient(900px 700px at 8% 112%, rgba(74, 36, 118, 0.6) 0%, transparent 55%),
+    linear-gradient(180deg, #0a0d26 0%, #070a1f 55%, #0c0724 100%);
+  overflow-x: hidden;
+}
+
+/* ---------- 页面骨架 ---------- */
+
+.app {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px;
+  overflow: hidden;
+}
+
+.loading {
+  margin-top: 42vh;
+  color: var(--text-dim);
+  font-size: 14px;
+  letter-spacing: 4px;
+}
+
+/* ---------- 星空背景 ---------- */
+
+.stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1.6px 1.6px at 22px 34px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1.2px 1.2px at 121px 87px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.8px 1.8px at 202px 161px, rgba(200, 220, 255, 0.85), transparent),
+    radial-gradient(1.1px 1.1px at 287px 43px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1.4px 1.4px at 156px 232px, rgba(255, 240, 200, 0.8), transparent),
+    radial-gradient(1px 1px at 61px 191px, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1.3px 1.3px at 254px 279px, rgba(255, 255, 255, 0.7), transparent);
+  background-size: 320px 320px;
+  animation: twinkle 5s ease-in-out infinite alternate;
+}
+
+.stars--far {
+  background-image:
+    radial-gradient(1px 1px at 45px 62px, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(0.8px 0.8px at 143px 25px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 96px 152px, rgba(200, 220, 255, 0.5), transparent),
+    radial-gradient(0.8px 0.8px at 178px 118px, rgba(255, 255, 255, 0.45), transparent);
+  background-size: 210px 210px;
+  opacity: 0.7;
+  animation-duration: 7.5s;
+  animation-delay: -2.5s;
+}
+
+@keyframes twinkle {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+
+/* ---------- 头部 ---------- */
+
+.app-header {
+  position: relative;
+  z-index: 1;
+  margin-top: 42px;
+  text-align: center;
+}
+
+.app-header h1 {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 8px;
+  text-indent: 8px;
+  color: var(--gold-bright);
+  text-shadow: 0 0 26px rgba(232, 199, 122, 0.35);
+}
+
+.app-header h1::before,
+.app-header h1::after {
+  content: '✦';
+  font-size: 13px;
+  color: var(--gold);
+  vertical-align: 6px;
+  margin: 0 14px;
+  opacity: 0.8;
+}
+
+.subtitle {
+  margin-top: 10px;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+}
+
+.config-warning {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #ffb0a0;
+}
+
+/* ---------- 舞台与横向轨道 ---------- */
+
+.stage {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  max-width: 920px;
+  min-height: 470px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.cups-track {
+  display: flex;
+  width: 200%;
+  /* 禁止被舞台 flex 布局压缩，保证每个面板占满舞台、非活跃面板完全滑出视野 */
+  flex-shrink: 0;
+  transition: transform 0.7s var(--ease-slide);
+  will-change: transform;
+}
+
+.cup-panel {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 18px;
+}
+
+/* 面板内文字元素：切换时淡入上浮 */
+.cup-panel .user-name,
+.cup-panel .percent,
+.cup-panel .percent-caption {
+  opacity: 0.12;
+  transform: translateY(12px);
+  transition: opacity 0.45s ease 0.18s, transform 0.45s ease 0.18s;
+}
+
+.cup-panel.is-active .user-name,
+.cup-panel.is-active .percent,
+.cup-panel.is-active .percent-caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.user-name {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 6px;
+  text-indent: 6px;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-name::before,
+.user-name::after {
+  content: '';
+  width: 30px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(232, 199, 122, 0.6));
+}
+
+.user-name::after {
+  background: linear-gradient(90deg, rgba(232, 199, 122, 0.6), transparent);
+}
+
+/* ---------- 量杯 ---------- */
+
+.cup svg {
+  width: min(62vw, 288px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 6px 18px rgba(60, 130, 230, 0.12));
+  transition: filter 0.6s ease;
+}
+
+.cup.is-active svg {
+  filter: drop-shadow(0 8px 32px rgba(96, 190, 255, 0.3));
+}
+
+/* 水体入场：从杯底升起 */
+.water-enter {
+  animation: waterRise 1.25s cubic-bezier(0.25, 0.9, 0.3, 1) both;
+  transform-origin: 130px 260px;
+}
+
+@keyframes waterRise {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* 波浪横向循环漂移，周期 = 波形宽度 140px */
+.wave-front {
+  animation: waveShift 3.4s linear infinite;
+}
+
+.wave-back {
+  opacity: 0.5;
+  animation: waveShift 5.2s linear infinite reverse;
+}
+
+@keyframes waveShift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-140px); }
+}
+
+/* 水中气泡 */
+.bubble {
+  opacity: 0;
+  animation: bubbleRise 5.2s ease-in infinite;
+}
+
+.bubble--b {
+  animation-duration: 6.4s;
+  animation-delay: -2.6s;
+}
+
+.bubble--c {
+  animation-duration: 4.4s;
+  animation-delay: -1.4s;
+}
+
+@keyframes bubbleRise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.75;
+  }
+  80% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-125px);
+    opacity: 0;
+  }
+}
+
+/* ---------- 百分比 ---------- */
+
+.percent {
+  margin-top: 6px;
+  display: flex;
+  align-items: baseline;
+}
+
+.percent-value {
+  font-size: 56px;
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--gold-bright);
+  text-shadow: 0 0 26px rgba(232, 199, 122, 0.35);
+  font-variant-numeric: tabular-nums;
+}
+
+.percent-sign {
+  margin-left: 5px;
+  font-size: 22px;
+  color: var(--gold);
+}
+
+.percent-caption {
+  margin-top: 4px;
+  font-size: 12px;
+  letter-spacing: 5px;
+  text-indent: 5px;
+  color: var(--text-dim);
+}
+
+/* ---------- 底部切换滑块 ---------- */
+
+.switch {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(76vw, 320px);
+  padding: 5px;
+  margin: 4px 0 46px;
+  border-radius: 999px;
+  background: rgba(18, 24, 58, 0.72);
+  border: 1px solid rgba(160, 190, 255, 0.18);
+  backdrop-filter: blur(6px);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc(50% - 5px);
+  border-radius: 999px;
+  background: linear-gradient(140deg, #f5dfa0 0%, #d4a94e 100%);
+  box-shadow: 0 2px 16px rgba(232, 199, 122, 0.45);
+  transition: transform 0.45s cubic-bezier(0.34, 1.3, 0.5, 1);
+}
+
+.switch-thumb[data-pos='userB'] {
+  transform: translateX(100%);
+}
+
+.switch button {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 3px;
+  text-indent: 3px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.switch button.active {
+  color: #241a06;
+  font-weight: 600;
+}
+
+.switch button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---------- 低动画偏好 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .cups-track,
+  .switch-thumb,
+  .cup-panel .user-name,
+  .cup-panel .percent,
+  .cup-panel .percent-caption {
+    transition: none;
+  }
+  .water-enter,
+  .wave-front,
+  .wave-back,
+  .bubble,
+  .stars {
+    animation: none;
+  }
+}
