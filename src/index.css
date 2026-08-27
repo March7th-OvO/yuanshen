@@ -325,21 +325,21 @@ button {
   transform: translateY(0);
 }
 
-/* corner notes */
-.stage-note {
-  position: absolute;
-  z-index: 2;
-  bottom: clamp(14px, 2.6vh, 26px);
-  pointer-events: none;
+/* character showcase sits outside the cup stage so mobile layouts never overlap */
+.character-showcase {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(20px, 5vw, 72px);
+  padding: clamp(18px, 3vh, 28px) clamp(14px, 2.6vw, 34px);
+  border-bottom: 1px dashed var(--line);
 }
 
-.stage-note--left {
-  left: clamp(14px, 2.6vw, 34px);
+.character-note--left {
   text-align: left;
 }
 
-.stage-note--right {
-  right: clamp(14px, 2.6vw, 34px);
+.character-note--right {
   text-align: right;
 }
 
@@ -378,12 +378,12 @@ button {
   margin-top: 12px;
 }
 
-.stage-note--right .character-preview-slots {
+.character-note--right .character-preview-slots {
   justify-content: flex-end;
 }
 
 .character-preview {
-  width: clamp(87px, 9.3vw, 123px);
+  width: clamp(54px, 6.2vw, 76px);
   aspect-ratio: 1;
   overflow: hidden;
   border: 1px solid rgba(197, 160, 89, 0.4);
@@ -406,7 +406,7 @@ button {
   place-items: center;
   color: rgba(241, 238, 232, 0.46);
   font-family: var(--serif);
-  font-size: clamp(45px, 4.8vw, 63px);
+  font-size: clamp(30px, 3.2vw, 40px);
   font-weight: 400;
   line-height: 1;
 }
@@ -632,21 +632,13 @@ button {
     min-height: 620px;
   }
 
-  .stage-note {
-    bottom: 12px;
-  }
-
-  .stage-note--right {
-    right: 14px;
-  }
-
   .character-preview-slots {
     gap: 6px;
     margin-top: 9px;
   }
 
   .character-preview {
-    width: 84px;
+    width: 54px;
   }
 
   .profile-frame {
@@ -700,6 +692,37 @@ button {
 
   .stage {
     min-height: 570px;
+  }
+
+  .character-showcase {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 18px 0;
+  }
+
+  .character-note {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 14px;
+    align-items: end;
+  }
+
+  .character-note--right {
+    text-align: left;
+  }
+
+  .character-note .stage-note-sub {
+    grid-column: 1;
+  }
+
+  .character-note .character-preview-slots {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin-top: 0;
+  }
+
+  .character-note--right .character-preview-slots {
+    justify-content: flex-start;
   }
 
   .cup-panel {
