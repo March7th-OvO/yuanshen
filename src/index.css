@@ -371,6 +371,46 @@ button {
   color: var(--text-dim);
 }
 
+/* compact character art previews keep the stage legible on narrow screens */
+.character-preview-slots {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.stage-note--right .character-preview-slots {
+  justify-content: flex-end;
+}
+
+.character-preview {
+  width: clamp(58px, 6.2vw, 82px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(197, 160, 89, 0.4);
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+}
+
+.character-preview img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.character-preview-empty {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: rgba(241, 238, 232, 0.46);
+  font-family: var(--serif);
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 400;
+  line-height: 1;
+}
+
 /* measuring cup */
 .cup {
   position: relative;
@@ -598,6 +638,15 @@ button {
 
   .stage-note--right {
     right: 14px;
+  }
+
+  .character-preview-slots {
+    gap: 6px;
+    margin-top: 9px;
+  }
+
+  .character-preview {
+    width: 56px;
   }
 
   .profile-frame {

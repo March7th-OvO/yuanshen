@@ -5,6 +5,42 @@ import UserSwitch from './components/UserSwitch.jsx';
 
 const ORDER = ['userA', 'userB'];
 
+const CHARACTER_PREVIEWS = {
+  current: [
+    {
+      alt: '爱德妲角色立绘',
+      src: 'https://pub-07b2a608dee146d9b624d2df382fd4c4.r2.dev/AoDaita.png',
+    },
+    null,
+  ],
+  upcoming: [
+    {
+      alt: '薇斯娜角色立绘',
+      src: 'https://pub-07b2a608dee146d9b624d2df382fd4c4.r2.dev/WeiSina.png',
+    },
+    {
+      alt: '沃娅妮莎角色立绘',
+      src: 'https://pub-07b2a608dee146d9b624d2df382fd4c4.r2.dev/WoYanisha.png',
+    },
+  ],
+};
+
+function CharacterPreviewSlots({ characters }) {
+  return (
+    <div className="character-preview-slots" aria-label="角色立绘预览">
+      {characters.map((character, index) => (
+        <div className="character-preview" key={character?.src ?? `empty-${index}`}>
+          {character ? (
+            <img src={character.src} alt={character.alt} />
+          ) : (
+            <span className="character-preview-empty" aria-label="暂无角色立绘">×</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function App() {
   const [active, setActive] = useState('userA');
   const [profiles, setProfiles] = useState(null);
@@ -60,10 +96,12 @@ export default function App() {
               <span className="five-star">五星</span>
             </p>
             <p className="stage-note-sub">8月12日-9月1日</p>
+            <CharacterPreviewSlots characters={CHARACTER_PREVIEWS.current} />
           </div>
           <div className="stage-note stage-note--right">
             <p className="stage-note-title">敬请期待新角色</p>
             <p className="stage-note-sub">9月23日</p>
+            <CharacterPreviewSlots characters={CHARACTER_PREVIEWS.upcoming} />
           </div>
           <div className="cups-track" style={{ transform: `translateX(${offset}%)` }}>
             {ORDER.map((key) => {
