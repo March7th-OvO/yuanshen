@@ -2,26 +2,26 @@ import { useEffect, useRef, useState } from 'react';
 import { loadProfiles, calcPercent, BOOST_THRESHOLD } from './lib/pity.js';
 import MeasuringCup from './components/MeasuringCup.jsx';
 import UserSwitch from './components/UserSwitch.jsx';
+import CharacterPreview3D from './components/CharacterPreview3D.jsx';
 
 const ORDER = ['userA', 'userB'];
-const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), maximum);
 
 const CHARACTER_PREVIEWS = {
   current: [
     {
       alt: '爱德妲角色立绘',
-      src: 'https://pub-07b2a608dee146d9b624d2df382fd4c4.r2.dev/AoDaita.png',
+      src: 'https://assets.yuanshenniubi.com/AoDaita.png',
     },
     null,
   ],
   upcoming: [
     {
       alt: '薇斯娜角色立绘',
-      src: 'https://pub-07b2a608dee146d9b624d2df382fd4c4.r2.dev/WeiSina.png',
+      src: 'https://assets.yuanshenniubi.com/WeiSina.png',
     },
     {
       alt: '沃娅妮莎角色立绘',
-      src: 'https://pub-07b2a608dee146d9b624d2df382fd4c4.r2.dev/WoYanisha.png',
+      src: 'https://assets.yuanshenniubi.com/WoYanisha.png',
     },
   ],
 };
@@ -56,55 +56,15 @@ export default function App() {
   const [configFailed, setConfigFailed] = useState(false);
   const [expandedCharacter, setExpandedCharacter] = useState(null);
   const [isPreviewClosing, setIsPreviewClosing] = useState(false);
-  const [previewTilt, setPreviewTilt] = useState({ x: 0, y: 0, shineX: 50, shineY: 50 });
   const swipeStartRef = useRef(null);
-  const previewDragRef = useRef(null);
 
   const openCharacterPreview = (character) => {
     setExpandedCharacter(character);
     setIsPreviewClosing(false);
-    setPreviewTilt({ x: 0, y: 0, shineX: 50, shineY: 50 });
   };
 
   const closeCharacterPreview = () => {
     setIsPreviewClosing(true);
-  };
-
-  const handlePreviewPointerDown = (event) => {
-    if (
-      !['mouse', 'touch'].includes(event.pointerType)
-      || isPreviewClosing
-      || window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    ) return;
-
-    // 将拖动限制为小范围倾斜，既保留立体感也避免遮挡内容。
-    event.currentTarget.setPointerCapture(event.pointerId);
-    previewDragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
-  };
-
-  const handlePreviewPointerMove = (event) => {
-    const dragStart = previewDragRef.current;
-    if (!dragStart || dragStart.pointerId !== event.pointerId) return;
-
-    // 允许更大的拖动范围，将灵敏度再降为原来的一半并限制在 ±15°。
-    event.preventDefault();
-    const deltaX = clamp(event.clientX - dragStart.x, -300, 300);
-    const deltaY = clamp(event.clientY - dragStart.y, -300, 300);
-    setPreviewTilt({
-      x: -deltaY / 20,
-      y: deltaX / 20,
-      shineX: 50 - deltaX * 0.14,
-      shineY: 50 - deltaY * 0.14,
-    });
-  };
-
-  const handlePreviewPointerEnd = (event) => {
-    if (previewDragRef.current?.pointerId !== event.pointerId) return;
-
-    previewDragRef.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
   };
 
   const changeUserBySwipe = (direction) => {
@@ -291,24 +251,7 @@ export default function App() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="image-lightbox-card">
-              <div
-                className="image-lightbox-tilt"
-                aria-label="按住鼠标或手指拖动可旋转照片"
-                style={{
-                  '--tilt-x': `${previewTilt.x}deg`,
-                  '--tilt-y': `${previewTilt.y}deg`,
-                  '--shine-x': `${previewTilt.shineX}%`,
-                  '--shine-y': `${previewTilt.shineY}%`,
-                }}
-                onPointerDown={handlePreviewPointerDown}
-                onPointerMove={handlePreviewPointerMove}
-                onPointerUp={handlePreviewPointerEnd}
-                onPointerCancel={handlePreviewPointerEnd}
-              >
-                <img className="image-lightbox-image" src={expandedCharacter.src} alt={expandedCharacter.alt} draggable="false" />
-                <div className="image-lightbox-sheen" aria-hidden="true" />
-                <div className="image-lightbox-back" aria-hidden="true" />
-              </div>
+              <CharacterPreview3D character={expandedCharacter} isClosing={isPreviewClosing} />
             </div>
             <button
               className="image-lightbox-close"
