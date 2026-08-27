@@ -250,7 +250,7 @@ button {
   width: 200%;
   min-height: inherit;
   flex-shrink: 0;
-  transition: transform 0.85s var(--ease-slide);
+  transition: transform 0.5s var(--ease-slide);
   will-change: transform;
 }
 
@@ -315,7 +315,7 @@ button {
 .cup-panel .metric-column {
   opacity: 0.08;
   transform: translateY(16px);
-  transition: opacity 0.55s ease 0.2s, transform 0.65s var(--ease-slide) 0.16s;
+  transition: opacity 0.32s ease 0.09s, transform 0.4s var(--ease-slide) 0.06s;
 }
 
 .cup-panel.is-active .user-name,
@@ -383,12 +383,25 @@ button {
 }
 
 .character-preview {
+  position: relative;
+  z-index: 0;
   width: clamp(180px, 9.3vw, 114px);
   aspect-ratio: 1;
+  padding: 0;
   overflow: hidden;
   border: 1px solid rgba(197, 160, 89, 0.4);
   background: rgba(255, 255, 255, 0.025);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+  cursor: zoom-in;
+  transition: transform 0.2s ease;
+}
+
+/* 仅在具备精确鼠标的设备上放大，避免移动端触摸后停留在悬停状态。 */
+@media (hover: hover) and (pointer: fine) {
+  .character-preview:hover {
+    z-index: 1;
+    transform: scale(1.2);
+  }
 }
 
 .character-preview img {
@@ -397,6 +410,11 @@ button {
   display: block;
   object-fit: cover;
   object-position: center top;
+}
+
+.character-preview:focus-visible {
+  outline: 1px solid var(--gold-pale);
+  outline-offset: 3px;
 }
 
 .character-preview-empty {
@@ -409,6 +427,139 @@ button {
   font-size: clamp(30px, 3.2vw, 40px);
   font-weight: 400;
   line-height: 1;
+}
+
+/* 点击角色立绘后显示的原图预览层。 */
+.image-lightbox {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 5, 8, 0.62);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  animation: lightboxFadeIn 1s ease both;
+}
+
+.image-lightbox.is-closing {
+  pointer-events: none;
+  animation: lightboxFadeOut 1s ease both;
+}
+
+.image-lightbox-content {
+  position: relative;
+  width: fit-content;
+  max-width: min(88vw, 860px);
+  max-height: 84vh;
+  perspective: 1200px;
+}
+
+.image-lightbox-card {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  animation: characterPreviewOpen 1s var(--ease-slide) both;
+}
+
+.image-lightbox-tilt {
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transform-style: preserve-3d;
+  transition: transform 0.12s ease-out;
+}
+
+.image-lightbox-tilt:active {
+  cursor: grabbing;
+}
+
+.image-lightbox-image,
+.image-lightbox-sheen,
+.image-lightbox-back {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.image-lightbox-image {
+  display: block;
+  max-width: 100%;
+  max-height: 84vh;
+  object-fit: contain;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.58);
+}
+
+/* 多层高光模拟塑封表面，光源位置由鼠标拖动方向决定。 */
+.image-lightbox-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at var(--shine-x) var(--shine-y), rgba(255, 255, 255, 0.64), transparent 28%),
+    linear-gradient(118deg, rgba(255, 255, 255, 0.24), transparent 32%, rgba(255, 255, 255, 0.12) 56%, transparent 70%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28), inset 0 0 24px rgba(255, 255, 255, 0.12);
+  mix-blend-mode: screen;
+  opacity: 0.72;
+  transform: translateZ(1px);
+}
+
+.image-lightbox-back {
+  position: absolute;
+  inset: 0;
+  border: 2px solid #555;
+  background: #d8d8d8;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+  transform: rotateY(180deg);
+}
+
+.image-lightbox.is-closing .image-lightbox-card {
+  animation: characterPreviewClose 1s var(--ease-slide) both;
+}
+
+.image-lightbox-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgba(241, 238, 232, 0.45);
+  border-radius: 50%;
+  background: rgba(10, 10, 12, 0.62);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.image-lightbox-close:focus-visible {
+  outline: 1px solid var(--gold-pale);
+  outline-offset: 3px;
+}
+
+@keyframes lightboxFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes lightboxFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes characterPreviewOpen {
+  from { opacity: 0; transform: rotateY(-360deg) rotateX(7deg) scale(0.18); }
+  to { opacity: 1; transform: rotateY(0) rotateX(0) scale(1); }
+}
+
+@keyframes characterPreviewClose {
+  from { opacity: 1; transform: rotateY(0) rotateX(0) scale(1); }
+  to { opacity: 0; transform: rotateY(360deg) rotateX(-7deg) scale(0.18); }
 }
 
 /* measuring cup */
@@ -561,7 +712,7 @@ button {
   height: 1px;
   background: var(--gold);
   box-shadow: 0 0 16px rgba(197, 160, 89, 0.28);
-  transition: transform 0.55s var(--ease-slide);
+  transition: transform 0.35s var(--ease-slide);
 }
 
 .switch-thumb[data-pos='userB'] {
@@ -761,7 +912,25 @@ button {
   .switch-thumb,
   .cup-panel .user-name,
   .cup-panel .visual-column,
-  .cup-panel .metric-column {
+  .cup-panel .metric-column,
+  .character-preview {
+    transition: none;
+  }
+
+  .character-preview:hover {
+    transform: none;
+  }
+
+  .image-lightbox,
+  .image-lightbox.is-closing,
+  .image-lightbox-card,
+  .image-lightbox.is-closing .image-lightbox-card {
+    animation: none;
+  }
+
+  .image-lightbox-tilt {
+    cursor: default;
+    transform: none;
     transition: none;
   }
 
