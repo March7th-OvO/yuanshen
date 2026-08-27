@@ -383,7 +383,7 @@ button {
 }
 
 .character-preview {
-  width: clamp(54px, 6.2vw, 76px);
+  width: clamp(180px, 9.3vw, 114px);
   aspect-ratio: 1;
   overflow: hidden;
   border: 1px solid rgba(197, 160, 89, 0.4);
@@ -630,6 +630,7 @@ button {
 
   .stage {
     min-height: 620px;
+    touch-action: pan-y;
   }
 
   .character-preview-slots {
@@ -638,7 +639,7 @@ button {
   }
 
   .character-preview {
-    width: 54px;
+    width: 81px;
   }
 
   .profile-frame {

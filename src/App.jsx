@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { loadProfiles, calcPercent, BOOST_THRESHOLD } from './lib/pity.js';
 import MeasuringCup from './components/MeasuringCup.jsx';
 import UserSwitch from './components/UserSwitch.jsx';
@@ -45,6 +45,42 @@ export default function App() {
   const [active, setActive] = useState('userA');
   const [profiles, setProfiles] = useState(null);
   const [configFailed, setConfigFailed] = useState(false);
+  const swipeStartRef = useRef(null);
+
+  const changeUserBySwipe = (direction) => {
+    const currentIndex = ORDER.indexOf(active);
+    const nextIndex = Math.min(Math.max(currentIndex + direction, 0), ORDER.length - 1);
+
+    if (nextIndex !== currentIndex) {
+      setActive(ORDER[nextIndex]);
+    }
+  };
+
+  const handlePointerDown = (event) => {
+    // 仅在移动端处理触摸输入，桌面端仍保持原有的点击交互。
+    if (event.pointerType !== 'touch' || !window.matchMedia('(max-width: 820px)').matches) return;
+
+    swipeStartRef.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+    };
+  };
+
+  const handlePointerEnd = (event) => {
+    const swipeStart = swipeStartRef.current;
+    swipeStartRef.current = null;
+
+    if (!swipeStart || swipeStart.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - swipeStart.x;
+    const deltaY = event.clientY - swipeStart.y;
+    const isHorizontalSwipe = Math.abs(deltaX) >= 48 && Math.abs(deltaX) > Math.abs(deltaY);
+
+    if (isHorizontalSwipe) {
+      changeUserBySwipe(deltaX < 0 ? 1 : -1);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -89,7 +125,14 @@ export default function App() {
           )}
         </header>
 
-        <main className="stage">
+        <main
+          className="stage"
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={() => {
+            swipeStartRef.current = null;
+          }}
+        >
           <div className="cups-track" style={{ transform: `translateX(${offset}%)` }}>
             {ORDER.map((key) => {
               const { name, fates, primogems } = profiles[key];
