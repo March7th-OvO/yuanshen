@@ -383,7 +383,7 @@ button {
 }
 
 .character-preview {
-  width: clamp(58px, 6.2vw, 82px);
+  width: clamp(87px, 9.3vw, 123px);
   aspect-ratio: 1;
   overflow: hidden;
   border: 1px solid rgba(197, 160, 89, 0.4);
@@ -406,7 +406,7 @@ button {
   place-items: center;
   color: rgba(241, 238, 232, 0.46);
   font-family: var(--serif);
-  font-size: clamp(30px, 3.2vw, 42px);
+  font-size: clamp(45px, 4.8vw, 63px);
   font-weight: 400;
   line-height: 1;
 }
@@ -646,7 +646,7 @@ button {
   }
 
   .character-preview {
-    width: 56px;
+    width: 84px;
   }
 
   .profile-frame {

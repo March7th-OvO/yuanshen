@@ -11,6 +11,13 @@
 - [package.json](file://package.json)
 </cite>
 
+## 更新摘要
+**所做更改**
+- 新增 CharacterPreviewSlots 组件文档，用于角色立绘预览展示
+- 更新应用架构，包含当前和即将上线的角色展示功能
+- 添加 R2 CDN 集成说明和响应式设计实现
+- 完善组件组合模式和用户交互流程
+
 ## 目录
 1. [简介](#简介)
 2. [项目结构](#项目结构)
@@ -24,9 +31,10 @@
 10. [附录：使用示例与集成方式](#附录使用示例与集成方式)
 
 ## 简介
-本仓库实现了一个以“水杯进度条”为核心的UI组件系统，用于可视化展示角色获取保底进度。系统包含两个关键组件：
+本仓库实现了一个以"水杯进度条"为核心的UI组件系统，用于可视化展示角色获取保底进度。系统包含三个关键组件：
 - MeasuringCup：SVG水杯进度条，具备波浪动画、气泡、软保底阈值线等视觉表现，支持响应式缩放与主题变量。
 - UserSwitch：用户切换开关，提供双用户状态切换、键盘与屏幕阅读器友好的交互体验。
+- CharacterPreviewSlots：角色立绘预览组件，支持当前UP角色和即将上线角色的展示，采用R2 CDN资源加载和响应式设计。
 
 应用通过读取配置文件或回退数据计算当前用户的保底百分比，并在页面上联动显示。整体采用React + Vite构建，样式基于CSS变量与媒体查询实现跨设备适配。
 
@@ -45,30 +53,34 @@ end
 subgraph "组件层"
 B["MeasuringCup.jsx"]
 C["UserSwitch.jsx"]
+D["CharacterPreviewSlots.jsx"]
 end
 subgraph "逻辑层"
-D["pity.js"]
+E["pity.js"]
 end
 subgraph "样式层"
-E["index.css"]
+F["index.css"]
 end
 subgraph "配置"
-F["config.properties"]
+G["config.properties"]
+H["R2 CDN资源"]
 end
 A --> B
 A --> C
 A --> D
-B --> D
 A --> E
-D --> F
+B --> E
+D --> H
+A --> F
+E --> G
 ```
 
 图表来源
-- [App.jsx:1-109](file://src/App.jsx#L1-L109)
+- [App.jsx:1-147](file://src/App.jsx#L1-L147)
 - [MeasuringCup.jsx:1-109](file://src/components/MeasuringCup.jsx#L1-L109)
 - [UserSwitch.jsx:1-22](file://src/components/UserSwitch.jsx#L1-L22)
 - [pity.js:1-73](file://src/lib/pity.js#L1-L73)
-- [index.css:1-710](file://src/index.css#L1-L710)
+- [index.css:1-759](file://src/index.css#L1-L759)
 - [config.properties:1-21](file://public/config.properties#L1-L21)
 
 章节来源
@@ -77,16 +89,19 @@ D --> F
 ## 核心组件
 - MeasuringCup：接收 percent、active、idPrefix 三个属性，渲染SVG水杯，内部根据percent动态计算水面高度，生成前后两层波浪路径，叠加气泡与软保底阈值线；active控制水面上升入场动画。
 - UserSwitch：接收 active、users、onChange，渲染左右两个按钮，通过data-pos驱动底部指示条滑动，点击触发onChange更新父级状态。
+- CharacterPreviewSlots：接收 characters 数组属性，渲染角色立绘预览网格，支持空位占位符显示，采用响应式设计和R2 CDN资源加载。
 
 章节来源
 - [MeasuringCup.jsx:17-109](file://src/components/MeasuringCup.jsx#L17-L109)
 - [UserSwitch.jsx:3-21](file://src/components/UserSwitch.jsx#L3-L21)
+- [App.jsx:28-42](file://src/App.jsx#L28-L42)
 
 ## 架构总览
 应用启动后，App负责：
 - 异步加载配置并解析为 profiles（失败时回退到内置数据）
 - 计算每个用户的保底百分比
-- 将数据传递给 MeasuringCup 和 UserSwitch
+- 管理角色立绘预览数据（当前UP和即将上线）
+- 将数据传递给 MeasuringCup、UserSwitch 和 CharacterPreviewSlots
 - 通过 CSS transform 在面板间切换，配合 UserSwitch 的 onChange 更新 active 用户
 
 ```mermaid
@@ -96,22 +111,25 @@ participant App as "App.jsx"
 participant P as "pity.js"
 participant Cup as "MeasuringCup.jsx"
 participant Switch as "UserSwitch.jsx"
+participant Preview as "CharacterPreviewSlots.jsx"
 U->>App : 打开页面
 App->>P : loadProfiles()
 P-->>App : {profiles, failed}
 App->>App : calcPercent(fates, primogems)
 App->>Cup : 传入 percent, active, idPrefix
 App->>Switch : 传入 active, users, onChange
+App->>Preview : 传入 CHARACTER_PREVIEWS.current/upcoming
 U->>Switch : 点击切换用户
 Switch-->>App : onChange(newActive)
 App->>App : 更新active并重绘
 ```
 
 图表来源
-- [App.jsx:13-104](file://src/App.jsx#L13-L104)
+- [App.jsx:13-147](file://src/App.jsx#L13-L147)
 - [pity.js:22-73](file://src/lib/pity.js#L22-L73)
 - [MeasuringCup.jsx:17-109](file://src/components/MeasuringCup.jsx#L17-L109)
 - [UserSwitch.jsx:3-21](file://src/components/UserSwitch.jsx#L3-L21)
+- [App.jsx:28-42](file://src/App.jsx#L28-L42)
 
 ## 详细组件分析
 
@@ -159,11 +177,11 @@ Idle --> End
 
 图表来源
 - [MeasuringCup.jsx:17-109](file://src/components/MeasuringCup.jsx#L17-L109)
-- [index.css:374-450](file://src/index.css#L374-L450)
+- [index.css:414-480](file://src/index.css#L414-L480)
 
 章节来源
 - [MeasuringCup.jsx:1-109](file://src/components/MeasuringCup.jsx#L1-L109)
-- [index.css:374-450](file://src/index.css#L374-L450)
+- [index.css:414-480](file://src/index.css#L414-L480)
 
 ### UserSwitch 组件
 - 功能概述
@@ -197,21 +215,68 @@ Note over S,A : 指示条随data-pos滑动
 
 图表来源
 - [UserSwitch.jsx:3-21](file://src/components/UserSwitch.jsx#L3-L21)
-- [App.jsx:8-104](file://src/App.jsx#L8-L104)
-- [index.css:497-570](file://src/index.css#L497-L570)
+- [App.jsx:8-147](file://src/App.jsx#L8-L147)
+- [index.css:537-610](file://src/index.css#L537-L610)
 
 章节来源
 - [UserSwitch.jsx:1-22](file://src/components/UserSwitch.jsx#L1-L22)
-- [index.css:497-570](file://src/index.css#L497-L570)
+- [index.css:537-610](file://src/index.css#L537-L610)
+
+### CharacterPreviewSlots 组件
+- 功能概述
+  - 角色立绘预览组件，用于展示当前UP角色和即将上线角色
+  - 支持空位占位符显示，提供优雅的空状态处理
+  - 采用响应式设计，适配不同屏幕尺寸
+- 数据结构
+  - 接收 characters 数组，每个元素包含 src（图片地址）和 alt（描述文本）
+  - 支持 null 值表示空位，显示占位符符号
+  - 预定义 CHARACTER_PREVIEWS 对象包含 current 和 upcoming 两组数据
+- 视觉设计
+  - 方形卡片布局，使用金色边框和阴影效果
+  - 图片采用 object-fit: cover 确保完整显示
+  - 空位显示半透明 × 符号，保持界面一致性
+- 资源管理
+  - 使用 R2 CDN 托管角色立绘资源
+  - 图片地址格式：https://pub-07b2a608dee146d9b624d2df382fd4c4.r2.dev/[角色名].png
+  - 支持懒加载和缓存优化
+- 响应式适配
+  - 使用 clamp() 函数实现弹性宽度
+  - 小屏幕下自动调整间距和尺寸
+  - 保持视觉层次和信息可读性
+- 可访问性
+  - 为每个图片提供有意义的 alt 描述
+  - 空位使用 aria-label 提供无障碍支持
+  - 容器设置 aria-label 描述整体用途
+
+```mermaid
+flowchart TD
+Input["characters 数组输入"] --> Map["遍历渲染"]
+Map --> Check{"character 存在?"}
+Check --> |是| Image["渲染角色立绘"]
+Check --> |否| Placeholder["显示占位符 ×"]
+Image --> Style["应用响应式样式"]
+Placeholder --> Style
+Style --> Output["输出预览卡片"]
+```
+
+图表来源
+- [App.jsx:28-42](file://src/App.jsx#L28-L42)
+- [index.css:374-412](file://src/index.css#L374-L412)
+
+章节来源
+- [App.jsx:28-42](file://src/App.jsx#L28-L42)
+- [index.css:374-412](file://src/index.css#L374-L412)
 
 ### App 与业务逻辑
 - 数据流
   - 加载配置：loadProfiles 尝试拉取 config.properties，失败则返回 FALLBACK_PROFILES
   - 解析配置：parseProfiles 仅识别 userA/userB 的 fates、primogems、name
   - 计算进度：calcPercent 将已消耗原石与剩余原石换算为百分比
+  - 角色预览：CHARACTER_PREVIEWS 定义当前和即将上线的角色数据
 - 界面联动
   - 通过 ORDER 数组控制面板顺序与偏移量
   - 将 percent 传给 MeasuringCup，将 active/users/onChange 传给 UserSwitch
+  - 将 CHARACTER_PREVIEWS.current/upcoming 传给 CharacterPreviewSlots
 - 错误处理
   - 网络或解析失败时，显示警告提示并使用兜底数据
 
@@ -231,6 +296,10 @@ class UserSwitch {
 +props : active, users, onChange
 +render()
 }
+class CharacterPreviewSlots {
++props : characters
++render()
+}
 class Pity {
 +calcPercent(fates, primogems) number
 +parseProfiles(text) object
@@ -238,17 +307,19 @@ class Pity {
 }
 App --> MeasuringCup : "传递进度"
 App --> UserSwitch : "切换用户"
+App --> CharacterPreviewSlots : "角色预览"
 App --> Pity : "计算与加载"
 ```
 
 图表来源
-- [App.jsx:1-109](file://src/App.jsx#L1-L109)
+- [App.jsx:1-147](file://src/App.jsx#L1-L147)
 - [MeasuringCup.jsx:17-109](file://src/components/MeasuringCup.jsx#L17-L109)
 - [UserSwitch.jsx:3-21](file://src/components/UserSwitch.jsx#L3-L21)
+- [App.jsx:28-42](file://src/App.jsx#L28-L42)
 - [pity.js:22-73](file://src/lib/pity.js#L22-L73)
 
 章节来源
-- [App.jsx:1-109](file://src/App.jsx#L1-L109)
+- [App.jsx:1-147](file://src/App.jsx#L1-L147)
 - [pity.js:1-73](file://src/lib/pity.js#L1-L73)
 
 ## 依赖关系分析
@@ -256,20 +327,23 @@ App --> Pity : "计算与加载"
 - Vite 作为构建工具，支持快速开发与生产构建
 - 样式与动画完全基于原生CSS，无第三方UI库依赖
 - 配置数据来自外部 properties 文件或内置回退数据
+- R2 CDN 提供角色立绘资源的全球加速分发
 
 ```mermaid
 graph LR
 R["React 18"] --> App["App.jsx"]
-R --> Comp["MeasuringCup.jsx / UserSwitch.jsx"]
+R --> Comp["MeasuringCup.jsx / UserSwitch.jsx / CharacterPreviewSlots.jsx"]
 V["Vite"] --> Build["构建产物"]
 CSS["index.css"] --> View["视图呈现"]
 Conf["config.properties"] --> Logic["pity.js"]
+CDN["R2 CDN"] --> Preview["角色立绘资源"]
 ```
 
 图表来源
 - [package.json:11-18](file://package.json#L11-L18)
-- [index.css:1-710](file://src/index.css#L1-L710)
+- [index.css:1-759](file://src/index.css#L1-L759)
 - [pity.js:61-73](file://src/lib/pity.js#L61-L73)
+- [App.jsx:8-26](file://src/App.jsx#L8-L26)
 
 章节来源
 - [package.json:1-20](file://package.json#L1-L20)
@@ -281,22 +355,26 @@ Conf["config.properties"] --> Logic["pity.js"]
   - 使用 will-change 提示浏览器对 transform 进行合成优化
   - 动画与过渡尽量使用GPU加速属性（transform、opacity）
   - 减少动效模式：prefers-reduced-motion 下禁用所有动画与过渡，提升可访问性与性能
+  - R2 CDN 提供高性能的图片资源加载和全球加速
 - 可访问性
   - SVG 设置 role="img" 与 aria-label，便于屏幕阅读器理解
   - UserSwitch 使用 tablist/tab 语义与 aria-selected，支持键盘导航
+  - CharacterPreviewSlots 为图片和空位提供适当的无障碍标签
   - 焦点可见性：focus-visible 提供清晰焦点指示
 - 跨浏览器兼容
   - 使用标准CSS特性（clip-path、linear-gradient、transform、animation）
   - 媒体查询覆盖主流分辨率断点
   - 字体栈包含常见中文字体回退，确保文本可读性
+  - R2 CDN 支持现代浏览器的HTTP/2和缓存策略
 
 章节来源
 - [MeasuringCup.jsx:1-109](file://src/components/MeasuringCup.jsx#L1-L109)
-- [index.css:686-709](file://src/index.css#L686-L709)
+- [index.css:735-759](file://src/index.css#L735-L759)
+- [App.jsx:8-26](file://src/App.jsx#L8-L26)
 
 ## 故障排查指南
 - 配置加载失败
-  - 现象：页面顶部显示“配置文件读取失败，当前使用内置兜底数据”
+  - 现象：页面顶部显示"配置文件读取失败，当前使用内置兜底数据"
   - 原因：fetch 请求失败或返回非200状态码
   - 处理：自动回退到 FALLBACK_PROFILES，不影响基本功能
   - 定位：检查网络与BASE_URL配置，确认 config.properties 可访问
@@ -309,35 +387,45 @@ Conf["config.properties"] --> Logic["pity.js"]
   - 处理：组件内 clamp 限制在0-100之间
   - 相关代码路径
     - [MeasuringCup.jsx:18-19](file://src/components/MeasuringCup.jsx#L18-L19)
+- 角色立绘加载失败
+  - 现象：角色预览显示空位占位符
+  - 原因：R2 CDN 资源不可访问或图片URL无效
+  - 处理：自动降级为空位显示，不影响主功能
+  - 定位：检查网络连接和R2 CDN服务状态
+  - 相关代码路径
+    - [App.jsx:8-26](file://src/App.jsx#L8-L26)
+    - [App.jsx:28-42](file://src/App.jsx#L28-L42)
 - 动画卡顿或闪烁
   - 现象：切换用户或水位变化时出现掉帧
   - 原因：大量DOM操作或复杂滤镜
   - 处理：使用 transform 与 opacity 动画，启用 will-change，减少重排
   - 相关代码路径
     - [index.css:246-255](file://src/index.css#L246-L255)
-    - [index.css:395-418](file://src/index.css#L395-L418)
+    - [index.css:435-480](file://src/index.css#L435-L480)
 - 移动端显示异常
   - 现象：布局错乱或内容溢出
   - 原因：未适配小屏断点
   - 处理：检查媒体查询与网格布局，确保响应式正确
   - 相关代码路径
-    - [index.css:572-684](file://src/index.css#L572-L684)
+    - [index.css:612-733](file://src/index.css#L612-L733)
 
 章节来源
 - [pity.js:61-73](file://src/lib/pity.js#L61-L73)
 - [MeasuringCup.jsx:18-19](file://src/components/MeasuringCup.jsx#L18-L19)
+- [App.jsx:8-26](file://src/App.jsx#L8-L26)
 - [index.css:246-255](file://src/index.css#L246-L255)
-- [index.css:395-418](file://src/index.css#L395-L418)
-- [index.css:572-684](file://src/index.css#L572-L684)
+- [index.css:435-480](file://src/index.css#L435-L480)
+- [index.css:612-733](file://src/index.css#L612-L733)
 
 ## 结论
-该UI组件系统以简洁的React组件与原生CSS为核心，实现了高可用、高性能的水杯进度条与用户切换功能。通过合理的状态管理、动画设计与可访问性保障，能够在多设备上提供一致的体验。同时，配置驱动的进度计算使系统具备良好的扩展性与维护性。
+该UI组件系统以简洁的React组件与原生CSS为核心，实现了高可用、高性能的水杯进度条、用户切换功能和角色立绘预览功能。通过合理的状态管理、动画设计与可访问性保障，能够在多设备上提供一致的体验。同时，配置驱动的进度计算和R2 CDN集成的角色资源管理使系统具备良好的扩展性与维护性。
 
 ## 附录：使用示例与集成方式
 - 集成步骤
-  - 在应用中引入 MeasuringCup 与 UserSwitch
+  - 在应用中引入 MeasuringCup、UserSwitch 和 CharacterPreviewSlots
   - 通过 App 管理 active 用户与 profiles 数据
   - 将 percent 计算结果传入 MeasuringCup，将 onChange 绑定到 UserSwitch
+  - 配置 CHARACTER_PREVIEWS 数据并传入 CharacterPreviewSlots
   - 样式已在 index.css 中定义，可直接复用
 - 组件属性与事件
   - MeasuringCup
@@ -346,19 +434,25 @@ Conf["config.properties"] --> Logic["pity.js"]
   - UserSwitch
     - props: active（字符串，当前选中用户键）、users（对象，用户数据映射）、onChange（函数，接收新选中键）
     - 无自定义插槽
+  - CharacterPreviewSlots
+    - props: characters（数组，角色数据，每个元素包含 src 和 alt）
+    - 无自定义插槽与事件
 - 主题与样式定制
   - 通过CSS变量（如 --gold、--blue-soft、--text）统一控制色彩与字体
-  - 可通过覆盖 .cup、.switch 等类名进行局部样式调整
+  - 可通过覆盖 .cup、.switch、.character-preview-slots 等类名进行局部样式调整
   - 支持 prefers-reduced-motion 自动降级动画
 - 实时演示
   - 运行开发服务器查看效果
   - 修改 config.properties 中的数值，刷新页面观察进度变化
   - 切换用户按钮验证状态管理与动画效果
+  - 查看角色立绘预览的响应式表现
 - 与其他UI元素的组合
   - 可与标题、说明文本、指标卡片等组合，形成完整的信息面板
   - 通过网格布局与间距控制，确保在不同屏幕下的可读性与美观度
+  - CharacterPreviewSlots 可与阶段说明文本结合，提供丰富的信息层次
 
 章节来源
-- [App.jsx:38-104](file://src/App.jsx#L38-L104)
-- [index.css:1-710](file://src/index.css#L1-L710)
+- [App.jsx:38-147](file://src/App.jsx#L38-L147)
+- [index.css:1-759](file://src/index.css#L1-L759)
 - [config.properties:12-21](file://public/config.properties#L12-L21)
+- [App.jsx:8-26](file://src/App.jsx#L8-L26)
