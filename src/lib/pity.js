@@ -4,6 +4,8 @@
 export const PITY_COST = 14400;
 // 一抽 = 160 原石
 export const FATE_COST = 160;
+// 达到该百分比后，五星角色出率大幅提升（软保底起点）
+export const BOOST_THRESHOLD = 82;
 
 // 配置读取失败时的兜底数据（与 config.properties 保持一致即可）
 export const FALLBACK_PROFILES = {

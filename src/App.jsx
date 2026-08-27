@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { loadProfiles, calcPercent } from './lib/pity.js';
+import { loadProfiles, calcPercent, BOOST_THRESHOLD } from './lib/pity.js';
 import MeasuringCup from './components/MeasuringCup.jsx';
 import UserSwitch from './components/UserSwitch.jsx';
 
@@ -54,6 +54,17 @@ export default function App() {
         </header>
 
         <main className="stage">
+          <div className="stage-note stage-note--left">
+            <p className="stage-note-title">
+              当期UP<span className="underlined">限定</span>
+              <span className="five-star">五星</span>
+            </p>
+            <p className="stage-note-sub">8月12日-9月1日</p>
+          </div>
+          <div className="stage-note stage-note--right">
+            <p className="stage-note-title">敬请期待新角色</p>
+            <p className="stage-note-sub">9月23日</p>
+          </div>
           <div className="cups-track" style={{ transform: `translateX(${offset}%)` }}>
             {ORDER.map((key) => {
               const { name, fates, primogems } = profiles[key];
@@ -77,7 +88,7 @@ export default function App() {
 
                     <div className="metric-column">
                       <div className="metric-rule" aria-hidden="true" />
-                      <div className="percent">
+                      <div className={`percent${percent >= BOOST_THRESHOLD ? ' is-boost' : ''}`}>
                         <span className="percent-value">{percent.toFixed(2)}</span>
                         <span className="percent-sign">%</span>
                       </div>
