@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { loadProfiles, calcPercent, BOOST_THRESHOLD } from './lib/pity.js';
+import { loadProfiles, getLatestProgressPoint, BOOST_THRESHOLD } from './lib/pity.js';
 import MeasuringCup from './components/MeasuringCup.jsx';
 import UserSwitch from './components/UserSwitch.jsx';
 import CharacterPreview3D from './components/CharacterPreview3D.jsx';
+import ProgressChart from './components/ProgressChart.jsx';
 
 const ORDER = ['userA', 'userB'];
 
@@ -179,8 +180,9 @@ export default function App() {
         >
           <div className="cups-track" style={{ transform: `translateX(${offset}%)` }}>
             {ORDER.map((key) => {
-              const { name, fates, primogems } = profiles[key];
-              const percent = calcPercent(fates, primogems);
+              const { name } = profiles[key];
+              const latestPoint = getLatestProgressPoint(profiles[key]);
+              const percent = latestPoint?.percent ?? 0;
               const isActive = active === key;
 
               return (
@@ -236,6 +238,8 @@ export default function App() {
         </aside>
 
         <UserSwitch active={active} users={profiles} onChange={setActive} />
+
+        <ProgressChart key={active} profile={profiles[active]} />
       </div>
 
       {expandedCharacter && (
